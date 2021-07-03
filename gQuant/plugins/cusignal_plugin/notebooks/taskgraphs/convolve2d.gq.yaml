@@ -1,0 +1,21 @@
+- id: sig_task
+  type: DummySignalNode
+  conf:
+    pycode: |-
+      import cupy as cp
+
+      gsig = cp.random.rand(int(1e4), int(1e4))
+      gfilt = cp.random.rand(5,5)
+
+      myout = {'out1': gsig, 'out2': gfilt}
+  inputs: {}
+- id: convolve2d_task
+  type: CusignalConvolve2dNode
+  conf:
+    mode: full
+    boundary: fill
+    fillvalue: 0
+    use_cpu: false
+  inputs:
+    in1: sig_task.out1
+    in2: sig_task.out2

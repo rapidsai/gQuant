@@ -1,0 +1,22 @@
+- id: sig_task
+  type: DummySignalNode
+  conf:
+    pycode: |-
+      import cupy as cp
+      import cusignal
+
+      sig = cp.random.rand(int(1e8))
+      win = cusignal.hann(int(1e3))
+
+      myout = {'out1': sig, 'out2': win}
+  inputs: {}
+- id: convolve_task
+  type: CusignalConvolveNode
+  conf:
+    mode: same
+    method: auto
+    normalize: true
+    use_cpu: false
+  inputs:
+    in1: sig_task.out1
+    in2: sig_task.out2
