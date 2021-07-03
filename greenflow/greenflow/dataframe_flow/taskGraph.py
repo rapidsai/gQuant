@@ -310,7 +310,7 @@ class TaskGraph(object):
         with open(filename, 'w') as fh:
             ruamel.yaml.dump(tlist_od, fh, default_flow_style=False)
 
-    def viz_graph(self, show_ports=False):
+    def viz_graph(self, show_ports=False, pydot_options=None):
         """
         Generate the visulization of the graph in the JupyterLab
 
@@ -320,6 +320,8 @@ class TaskGraph(object):
         """
         import networkx as nx
         G = nx.DiGraph()
+        if pydot_options:
+            G.graph['graph'] = pydot_options
         # instantiate objects
         for itask in self:
             task_inputs = itask[TaskSpecSchema.inputs]
@@ -488,6 +490,18 @@ class TaskGraph(object):
         # print('----done----')
 
     def __getitem__(self, key):
+        if not self.__node_dict:
+            warnings.warn(
+                'Task graph internal state empty. Did you build the task '
+                'graph? Run ".build()"',
+                RuntimeWarning)
+
+        elif key not in self.__node_dict:
+            warnings.warn(
+                'Task graph missing task id "{}". Check the spelling of the '
+                'task id.'.format(key),
+                RuntimeWarning)
+
         return self.__node_dict[key]
 
     def __str__(self):
@@ -694,9 +708,10 @@ class TaskGraph(object):
             return self._run(outputs=outputs, replace=replace, profile=profile,
                              formated=formated)
 
-    def to_pydot(self, show_ports=False):
+    def to_pydot(self, show_ports=False, pydot_options=None):
         import networkx as nx
-        nx_graph = self.viz_graph(show_ports=show_ports)
+        nx_graph = self.viz_graph(show_ports=show_ports,
+                                  pydot_options=pydot_options)
         to_pydot = nx.drawing.nx_pydot.to_pydot
         pdot = to_pydot(nx_graph)
         return pdot
@@ -710,9 +725,20 @@ class TaskGraph(object):
             self.__widget = widget
         return self.__widget
 
-    def draw(self, show='lab', fmt='png', show_ports=False):
+    def draw(self, show='lab', fmt='png', show_ports=False,
+             pydot_options=None):
+        '''
+        :param show: str; One of 'ipynb', 'lab'
+        :param fmt: str; 'png' or 'svg'. Only used if show='ipynb'
+        :param show_ports: boolean; Labels intermediate ports between nodes in
+            the taskgraph. Only used if show='ipynb'
+        :param pydot_options: dict; Passed to the graph attribute of a graphviz
+            generated dot graph. Only used when show='ipynb'. Refer to:
+                https://graphviz.org/doc/info/attrs.html
+            Example: pydot_options={'rankdir': 'LR'} to draw left-to-right
+        '''
         if show in ('ipynb',):
-            pdot = self.to_pydot(show_ports)
+            pdot = self.to_pydot(show_ports, pydot_options)
             pdot_out = pdot.create(format=fmt)
             if fmt in ('svg',):
                 from IPython.display import SVG as Image  # @UnusedImport

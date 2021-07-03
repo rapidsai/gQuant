@@ -1,0 +1,20 @@
+- id: sig_task
+  type: DummySignalNode
+  conf:
+    pycode: |-
+      import cupy as cp
+
+      sig = cp.random.rand(int(1e8))
+      sig_noise = sig + cp.random.randn(len(sig))
+      sig_corr = cp.ones(128)
+
+      myout = {'out1': sig_noise, 'out2': sig_corr}
+  inputs: {}
+- id: correlate_task
+  type: CusignalCorrelationNode
+  conf:
+    mode: same
+    scale: 1000000
+  inputs:
+    in1: sig_task.out1
+    in2: sig_task.out2

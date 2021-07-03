@@ -90,8 +90,13 @@ def import_submodules(package, recursive=True, _main_package=None):
                 continue
             if not issubclass(nodecls, _Node):
                 continue
+            if nodecls.__name__ == 'Node':
+                continue
 
-            setattr(_main_package, nodecls.__name__, nodecls)
+            try:
+                getattr(_main_package, nodecls.__name__)
+            except AttributeError:
+                setattr(_main_package, nodecls.__name__, nodecls)
 
 
 def load_modules(pathfile, name=None):
@@ -213,6 +218,7 @@ def get_node_obj(task, replace=None, profile=False, tgraph_mixin=False,
                     modules[module_name], name=module_name)
                 module_dir = loaded.path
                 mod = loaded.mod
+
             try:
                 NodeClass = getattr(mod, node_type)
             except AttributeError:

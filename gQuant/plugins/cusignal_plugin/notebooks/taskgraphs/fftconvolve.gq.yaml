@@ -1,0 +1,18 @@
+- id: fftconvolve_task
+  type: CusignalFFTConvolveNode
+  conf:
+    mode: full
+    axes: []
+    use_cpu: false
+  inputs:
+    in1: sig_task.out1
+    in2: sig_task.out2
+- id: sig_task
+  type: DummySignalNode
+  conf:
+    pycode: |-
+      import cupy as cp
+      gsig = cp.random.randn(int(1e8))
+      gsig_reverse = gsig[::-1]
+      myout = {'out1': gsig, 'out2': gsig_reverse}
+  inputs: {}
